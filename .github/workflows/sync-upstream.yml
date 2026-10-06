@@ -1,0 +1,37 @@
+name: Sync 5etools upstream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 7 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-5etools-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/5etools-mirror-3/5etools-src.git
+          git fetch upstream main
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "Fork already up to date."
+            exit 0
+          fi
+          git merge --no-edit upstream/main
+          git push origin HEAD:main
